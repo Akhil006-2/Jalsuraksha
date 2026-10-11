@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class Settings:
     raster_path = Path(os.getenv("JALSURAKSHA_RASTER", str(ROOT / "data/processed/susceptibility/chennai_flood_susceptibility_v1.tif")))
     graph_path = Path(os.getenv("JALSURAKSHA_ROAD_GRAPH", str(ROOT / "data/processed/roads/chennai.graphml")))
+    flood_hazard_kml = Path(os.getenv("JALSURAKSHA_FLOOD_HAZARD_KML", str(ROOT / "data/raw/flood/chennai_flows_100yr.kml")))
     reports_path = Path(os.getenv("JALSURAKSHA_REPORT_STORE", str(ROOT / "data/reports/reports.json")))
     database_path = Path(os.getenv("JALSURAKSHA_SQLITE_PATH", str(ROOT / "data/reports/jalsuraksha.sqlite3")))
     storage_backend = os.getenv("JALSURAKSHA_STORAGE_BACKEND", "json").strip().lower()

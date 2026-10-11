@@ -26,3 +26,16 @@ def test_route_is_explicit_when_graph_missing(client):
     r=client.post("/api/v1/routes/compare",json={"origin":{"latitude":13.08,"longitude":80.27},"destination":{"latitude":13.06,"longitude":80.25}})
     assert r.status_code==200
     assert r.json()["status"] in {"ok","unavailable","no_feasible_route"}
+
+
+def test_flood_hazard_api_exposes_static_source_and_limits(client):
+    r = client.get("/api/v1/flood-hazards")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["metadata"]["available"] is True
+    assert data["metadata"]["return_period_years"] == 100
+    assert "not a live" in data["metadata"]["time_note"].lower()
+    at = client.get("/api/v1/flood-hazards/at", params={"latitude": 0, "longitude": 0})
+    assert at.status_code == 200
+    assert at.json()["category"] == "UNCLASSIFIED"
+    assert at.json()["mapped"] is False

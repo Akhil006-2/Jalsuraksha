@@ -12,6 +12,7 @@ from app.services.susceptibility import sample, status as raster_status, overlay
 from app.services.hazards import clusters, at_location
 from app.services.routing import compare
 from app.services.responder import overview, pump_priorities
+from app.services.flood_hazard import geojson as flood_hazard_geojson, classify as classify_flood_hazard, status as flood_hazard_status
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("jalsuraksha")
@@ -70,10 +71,24 @@ def api_status():
     cfg = settings()
     return {"name":"JalSuraksha API","version":"1.0.0","environment":"development",
         "components":{"susceptibility_raster":raster_status(),
+        "flood_hazard":flood_hazard_status(),
         "road_graph":{"available":cfg.graph_path.exists(),"path":str(cfg.graph_path)},
         "report_store":{"configured":True,"path":str(cfg.reports_path)},
         "live_sensor_feed":{"available":False},"sagemaker_online_endpoint":{"configured":False}},
         "safety_notice":"Susceptibility is not live flood observation or calibrated probability. No road graph means routing is unavailable."}
+
+@app.get("/api/v1/flood-hazards", tags=["Flood hazard"])
+def flood_hazards():
+    """Static GCC/OpenCity 100-year return-period hazard polygons; not live conditions."""
+    return flood_hazard_geojson()
+
+@app.get("/api/v1/flood-hazards/at", tags=["Flood hazard"])
+def flood_hazard_at(latitude:float=Query(ge=-90,le=90), longitude:float=Query(ge=-180,le=180)):
+    result = classify_flood_hazard(latitude, longitude)
+    return {"latitude":latitude, "longitude":longitude, **result,
+            "source":"OpenCity / Greater Chennai Corporation",
+            "return_period_years":100,
+            "warning":"Static design hazard only. UNCLASSIFIED does not mean flood-free."}
 
 @app.get("/api/v1/susceptibility", tags=["Susceptibility"])
 def susceptibility(latitude:float=Query(ge=-90,le=90), longitude:float=Query(ge=-180,le=180)):

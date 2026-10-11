@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { MapContainer, TileLayer, ImageOverlay, CircleMarker, Polyline, Popup, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, TileLayer, ImageOverlay, CircleMarker, Polyline, Popup, GeoJSON, useMap, useMapEvents } from 'react-leaflet'
 import type { LeafletMouseEvent } from 'leaflet'
 import { AlertTriangle, ArrowDownRight, ArrowRight, CheckCircle2, Clock3, Droplets, LocateFixed, MapPin, Navigation, RefreshCw, ShieldCheck, Upload, Users, Waves, X } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
@@ -46,6 +46,8 @@ function App(){
   const [reports,setReports]=useState<Report[]>([])
   const [clusters,setClusters]=useState<Cluster[]>([])
   const [status,setStatus]=useState<Status|null>(null)
+  const [floodHazards,setFloodHazards]=useState<any>(null)
+  const [showFloodHazards,setShowFloodHazards]=useState(true)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
@@ -77,13 +79,14 @@ function App(){
   const refresh=useCallback(async()=>{
     setError('')
     try {
-      const [r,c,s,b]=await Promise.all([
+      const [r,c,s,b,h]=await Promise.all([
         api<Report[]>('/api/v1/reports'),
         api<Cluster[]>('/api/v1/hazards/clusters'),
         api<Status>('/api/v1/status'),
-        api<{bounds:[[number,number],[number,number]]}>('/api/v1/susceptibility/bounds')
+        api<{bounds:[[number,number],[number,number]]}>('/api/v1/susceptibility/bounds'),
+        api<any>('/api/v1/flood-hazards')
       ])
-      setReports(r);setClusters(c);setStatus(s);setBounds(b.bounds);setLastUpdated(new Date())
+      setReports(r);setClusters(c);setStatus(s);setBounds(b.bounds);setFloodHazards(h);setLastUpdated(new Date())
     } catch(e){setError(e instanceof Error?e.message:'Unable to connect to backend')}
   },[])
   useEffect(()=>{void refresh();const t=window.setInterval(()=>void refresh(),45000);return()=>window.clearInterval(t)},[refresh])
@@ -173,7 +176,7 @@ function App(){
       </section>
       <section className="main-grid">
         <article className="panel map-panel">
-          <div className="panel-heading"><div><h2>Chennai situation map <span className="map-status-dot"/> <small>OPENSTREETMAP</small></h2><p>Choose a point to report water or set a route endpoint.</p></div><div className="map-tools"><label className="toggle-label"><input type="checkbox" checked={showOverlay} onChange={e=>setShowOverlay(e.target.checked)}/> Susceptibility</label><button className="icon-button" title="Refresh data" onClick={()=>void refresh()}><RefreshCw size={16}/></button></div></div>
+          <div className="panel-heading"><div><h2>Chennai situation map <span className="map-status-dot"/> <small>OPENSTREETMAP</small></h2><p>Choose a point to report water or set a route endpoint.</p></div><div className="map-tools"><label className="toggle-label"><input type="checkbox" checked={showFloodHazards} onChange={e=>setShowFloodHazards(e.target.checked)}/> Flood zones</label><label className="toggle-label"><input type="checkbox" checked={showOverlay} onChange={e=>setShowOverlay(e.target.checked)}/> Susceptibility</label><button className="icon-button" title="Refresh data" onClick={()=>void refresh()}><RefreshCw size={16}/></button></div></div>
           <div className="searchbar"><input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')void searchPlaces()}} placeholder="Search a place in Chennai…"/><button onClick={()=>void searchPlaces()} disabled={searchBusy}>{searchBusy?'…':'Search'}</button></div>
           {searchResults.length>0&&<div className="search-results">{searchResults.map((r:any)=><button key={r.place_id} onClick={()=>{setMapTarget([Number(r.lat),Number(r.lon)]);setSearchResults([]);setSearch(r.display_name)}}>{r.display_name}</button>)}</div>}
           <div className="map-actions">
@@ -185,6 +188,7 @@ function App(){
             <MapContainer center={CHENNAI} zoom={11} scrollWheelZoom className="leaflet-map">
               <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
               {showOverlay&&bounds&&<ImageOverlay url={`${API}/api/v1/susceptibility/overlay.png`} bounds={bounds} opacity={opacity} />}
+              {showFloodHazards&&floodHazards?.features?.length>0&&<GeoJSON data={floodHazards} style={(feature:any)=>({color:feature?.properties?.category==='HIGH'?'#b91c1c':feature?.properties?.category==='MODERATE'?'#d97706':'#15803d',weight:1.5,fillOpacity:0.12,fillColor:feature?.properties?.category==='HIGH'?'#ef4444':feature?.properties?.category==='MODERATE'?'#f59e0b':'#22c55e'})} onEachFeature={(feature:any,layer:any)=>layer.bindPopup(`<b>${feature?.properties?.category||'UNCLASSIFIED'} flood design-hazard zone</b><br/>100-year return-period source layer<br/>Static data; not live conditions.`)}/>}
               <FlyTo target={mapTarget}/>
               <MapClick onPick={onMapPick}/>
               {activeReports.map(r=><CircleMarker key={r.id} center={[r.latitude,r.longitude]} radius={r.status==='verified'?8:6} pathOptions={{color:'#fff',weight:2,fillColor:depthColor[r.depth],fillOpacity:.95}} eventHandlers={{click:()=>{setMapTarget([r.latitude,r.longitude]);setReportLocation({latitude:r.latitude,longitude:r.longitude})}}}><Popup><b>{depthLabel[r.depth]}</b><br/>{(r.status==='new'&&isCommunityCorroborated(r))?'Corroborated by community':(statusLabel[r.status]||r.status)}<br/>{fmtAge(r.observed_at)}{r.description&&<><br/>{r.description}</>}</Popup></CircleMarker>)}
@@ -196,8 +200,8 @@ function App(){
             </MapContainer>
             {pickMode&&<div className="map-instruction">Click the map to select {pickMode==='report'?'a report location':pickMode==='origin'?'route origin':'route destination'} <button onClick={()=>setPickMode(null)}>Cancel</button></div>}
           </div>
-          <div className="map-footer"><div className="legend"><span><i className="legend-ankle"/>Ankle</span><span><i className="legend-knee"/>Knee</span><span><i className="legend-waist"/>Waist / stalled</span><span><i className="legend-cluster"/>Community cluster</span></div><label className="opacity-control">Overlay opacity <input type="range" min="0.1" max="1" step="0.05" value={opacity} onChange={e=>setOpacity(Number(e.target.value))}/></label></div>
-          <div className="map-caveat"><span/> Static susceptibility layer · community reports are observations, not official flood confirmation.</div>
+          <div className="map-footer"><div className="legend"><span><i className="legend-ankle"/>Ankle</span><span><i className="legend-knee"/>Knee</span><span><i className="legend-waist"/>Waist / stalled</span><span><i className="legend-cluster"/>Community cluster</span><span><i style={{background:'#b91c1c'}}/>High design hazard</span><span><i style={{background:'#d97706'}}/>Moderate</span><span><i style={{background:'#15803d'}}/>Low</span></div><label className="opacity-control">Overlay opacity <input type="range" min="0.1" max="1" step="0.05" value={opacity} onChange={e=>setOpacity(Number(e.target.value))}/></label></div>
+          <div className="map-caveat"><span/> Static susceptibility and 100-year design-hazard layers · neither indicates live water levels; unclassified areas are not confirmed safe.</div>
         </article>
         <div className="side-stack">
           {activeView==='community'?<>
