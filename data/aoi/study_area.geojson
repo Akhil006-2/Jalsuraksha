@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "study_area",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "aoi_id": "CHENNAI_VELACHERY_PALLIKARANAI", "name": "Velachery-Pallikaranai Study Area" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 80.27, 12.9 ], [ 80.27, 12.995 ], [ 80.17, 12.995 ], [ 80.17, 12.9 ], [ 80.27, 12.9 ] ] ] } }
+]
+}

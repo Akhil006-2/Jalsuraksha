@@ -1,0 +1,62 @@
+[
+  {
+    "id": "922e3add-9154-4cc4-a5dd-7254a3bfd522",
+    "latitude": 13.019586785016983,
+    "longitude": 80.26207265273104,
+    "depth": "waist_or_stalled_cars",
+    "reporter_id": "f80e82a1-f4bd-4800-be80-4b035818eaeb",
+    "description": "high flood in the roads",
+    "photo_key": "0e50a5b37ab84f18a85481163d01abcb.webp",
+    "observed_at": "2026-10-10T09:33:54.527525+00:00",
+    "received_at": "2026-10-10T09:33:54.527525+00:00",
+    "status": "verified"
+  },
+  {
+    "id": "f76e1ec7-adde-4dfa-9f4d-4624e5258ee4",
+    "latitude": 13.019747761578662,
+    "longitude": 80.26223358755755,
+    "depth": "knee",
+    "reporter_id": "f80e82a1-f4bd-4800-be80-4b035818eaeb",
+    "description": "high water",
+    "photo_key": null,
+    "observed_at": "2026-10-10T09:34:10.310143+00:00",
+    "received_at": "2026-10-10T09:34:10.310143+00:00",
+    "status": "new"
+  },
+  {
+    "id": "5920a714-8766-4d3c-8e4c-cc906e0d89e7",
+    "latitude": 13.019345319818878,
+    "longitude": 80.26182052150278,
+    "depth": "knee",
+    "reporter_id": "f80e82a1-f4bd-4800-be80-4b035818eaeb",
+    "description": "high flood",
+    "photo_key": null,
+    "observed_at": "2026-10-10T09:34:23.895239+00:00",
+    "received_at": "2026-10-10T09:34:23.895239+00:00",
+    "status": "new"
+  },
+  {
+    "id": "de7f9881-e49c-4662-a8e4-eb3a55e9921f",
+    "latitude": 13.020185742922878,
+    "longitude": 80.26257155069325,
+    "depth": "ankle",
+    "reporter_id": "f80e82a1-f4bd-4800-be80-4b035818eaeb",
+    "description": "raising water",
+    "photo_key": null,
+    "observed_at": "2026-10-10T09:34:38.678234+00:00",
+    "received_at": "2026-10-10T09:34:38.678234+00:00",
+    "status": "new"
+  },
+  {
+    "id": "04f0629c-b82d-4cdc-9762-cffd98192690",
+    "latitude": 13.018889566799016,
+    "longitude": 80.26142354893065,
+    "depth": "ankle",
+    "reporter_id": "f80e82a1-f4bd-4800-be80-4b035818eaeb",
+    "description": "water entering",
+    "photo_key": null,
+    "observed_at": "2026-10-10T09:34:57.174970+00:00",
+    "received_at": "2026-10-10T09:34:57.174970+00:00",
+    "status": "new"
+  }
+]

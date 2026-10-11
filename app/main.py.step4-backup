@@ -1,0 +1,128 @@
+﻿from datetime import datetime, timezone
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+
+APP_NAME = "JalSuraksha API"
+APP_VERSION = "1.0.0"
+
+app = FastAPI(
+    title=APP_NAME,
+    version=APP_VERSION,
+    description=(
+        "Flood susceptibility, community hazard reporting, "
+        "and risk-aware route planning for Chennai."
+    ),
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+# Development origins only. Restrict these to the actual frontend
+# origins before public deployment.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    version: str
+    timestamp: datetime
+
+
+class ApiInfoResponse(BaseModel):
+    name: str
+    version: str
+    environment: str
+    capabilities: list[str]
+    integrations: dict[str, str]
+
+
+@app.get("/", tags=["System"])
+def root() -> dict[str, str]:
+    return {
+        "service": APP_NAME,
+        "version": APP_VERSION,
+        "docs": "/docs",
+        "health": "/api/v1/health",
+    }
+
+
+@app.get("/api/v1/health", response_model=HealthResponse, tags=["System"])
+def health() -> HealthResponse:
+    return HealthResponse(
+        status="ok",
+        service=APP_NAME,
+        version=APP_VERSION,
+        timestamp=datetime.now(timezone.utc),
+    )
+
+
+@app.get("/api/v1/status", response_model=ApiInfoResponse, tags=["System"])
+def status() -> ApiInfoResponse:
+    return ApiInfoResponse(
+        name=APP_NAME,
+        version=APP_VERSION,
+        environment="development",
+        capabilities=[
+            "flood_reporting",
+            "susceptibility_mapping",
+            "hazard_corroboration",
+            "vehicle_aware_routing",
+            "responder_analytics",
+        ],
+        integrations={
+            "susceptibility_model": "local artifact; integration pending",
+            "susceptibility_raster": "local GeoTIFF; integration pending",
+            "road_network": "not configured",
+            "report_storage": "development storage not configured",
+        },
+    )
+
+
+@app.get("/api/v1", tags=["System"])
+def api_overview() -> dict[str, Any]:
+    return {
+        "api_version": "v1",
+        "message": "JalSuraksha API foundation is running.",
+        "safety_notice": (
+            "This API does not yet provide live flood verification "
+            "or validated safe-route recommendations."
+        ),
+        "available_endpoints": [
+            "GET /",
+            "GET /api/v1",
+            "GET /api/v1/health",
+            "GET /api/v1/status",
+        ],
+    }
+
+
+@app.exception_handler(Exception)
+async def unexpected_error_handler(request, exc: Exception):
+    # Avoid exposing stack traces or internal details to API clients.
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected server error occurred.",
+                "path": request.url.path,
+            }
+        },
+    )

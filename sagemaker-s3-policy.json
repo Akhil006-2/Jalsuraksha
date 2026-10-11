@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ReadTrainingInputs",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::jalsuraksha-chennai-2026-ap-south-1",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "training/susceptibility_v1",
+            "training/susceptibility_v1/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadTrainingObjects",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::jalsuraksha-chennai-2026-ap-south-1/training/susceptibility_v1/*"
+    },
+    {
+      "Sid": "WriteModelArtifacts",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::jalsuraksha-chennai-2026-ap-south-1/models/susceptibility_v1/*"
+    }
+  ]
+}
