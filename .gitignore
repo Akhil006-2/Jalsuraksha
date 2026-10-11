@@ -8,3 +8,14 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env
 .env
+
+# Large geospatial data and generated outputs
+data/raw/
+data/processed/
+data/interim/
+runs/
+cache/
+*.tif
+*.tiff
+*.graphml
+*.gpkg
